@@ -45,13 +45,15 @@ bedrock_retriever = AmazonKnowledgeBasesRetriever(
 
 class GraphState(TypedDict):
     question: str
+    documents: str
+    generation: str
 
 
 def router_invoke(state):
     print("Invoking the router.")
     user_query = state["question"]
-    print("here form invoking the router", user_query)
-    print(state)
+    # print("here form invoking the router", user_query)
+    # print(state)
     return {"question": user_query}
 
 
@@ -59,7 +61,7 @@ def generate(state):
     print("state from the generator", state)
     question = state["question"]
     documents = state["documents"]
-    print("documents here", documents)
+    # print("documents here", documents)
     print("Generator invoked")
     # Generate response using the retrieved documents
     context = "\n".join(documents)
@@ -75,12 +77,11 @@ Keep the answer concise."""
 def retrieve(state):
     print("Retriever invoked")
     question = state["question"]
-    print("question after retriever is invoked", question)
+    # print("question after retriever is invoked", question)
     docs = bedrock_retriever.invoke(question)
-    print("docs from the retriever", docs)
+    # print("docs from the retriever", docs)
     documents = [doc.page_content for doc in docs]
-    print("here is the catch", documents)
-    state["messages"] = [documents]+state["messages"]
+    # print("here is the catch", documents)
     return {"documents": documents, "question": question}
 
 
@@ -101,7 +102,7 @@ workflow.add_edge("generate", END)
 app = workflow.compile()
 
 # Test case to invoke the KB
-question = "What is mentioned in the code RDS-001the document about?"
-inputs = {"question": question}
-graph_out = app.invoke(inputs)
-print(graph_out)
+question = "What is the document about?"
+graph_out = app.invoke({"question": question})
+response = graph_out.get("generation").content
+print(response)
